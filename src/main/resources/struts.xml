@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE struts PUBLIC
+        "-//Apache Software Foundation//DTD Struts Configuration 2.5//EN"
+        "http://struts.apache.org/dtds/struts-2.5.dtd">
+
+<struts>
+    <!-- 是否使用struts的开发模式。开发模式会有更多的调试信息。默认值为false(生产环境下使用),开发阶段最好打开 -->
+    <constant name="struts.devMode" value="true" />
+
+    <!-- 请求参数的编码方式 -->
+    <constant name="struts.i18n.encoding" value="UTF-8" />
+    <!-- Suffix used to find actions based on class names -->
+    <constant name="struts.convention.action.suffix" value="Action" />
+    <!-- Create action mappings, even if no @Action is found -->
+    <constant name="struts.convention.action.mapAllMatches" value="true" />
+
+    <!-- Directory where templates are located -->
+    <constant name="struts.convention.result.path" value="/content" />
+
+    <constant name="struts.enable.DynamicMethodInvocation" value="true" />
+    <constant name="struts.ognl.allowStaticMethodAccess" value="true" />
+    <constant name="struts.action.extension" value="do" />
+    
+    <!-- <global-allowed-methods>execute,input,cancel,regex:([a-zA-Z]*)</global-allowed-methods> -->
+</struts>
