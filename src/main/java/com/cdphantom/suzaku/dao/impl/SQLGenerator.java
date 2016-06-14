@@ -33,21 +33,21 @@ public class SQLGenerator extends GenerateQL {
     private static final Map<String, String> TABLE_ALIASES = new HashMap<String, String>();
 
     /**
-     * »ñÈ¡ PO »ò VO ÀàÖĞÒª²éÑ¯µÄÁĞÃûÓë×Ö¶ÎÃûµÄÓ³Éä¹ØÏµ
-     * @param clazz PO »ò VO ÀàµÄ¶¨Òå
-     * @return Òª²éÑ¯µÄÁĞÃûÓë×Ö¶ÎÃûµÄÓ³Éä¹ØÏµ
+     * è·å– PO æˆ– VO ç±»ä¸­è¦æŸ¥è¯¢çš„åˆ—åä¸å­—æ®µåçš„æ˜ å°„å…³ç³»
+     * @param clazz PO æˆ– VO ç±»çš„å®šä¹‰
+     * @return è¦æŸ¥è¯¢çš„åˆ—åä¸å­—æ®µåçš„æ˜ å°„å…³ç³»
      */
     public Map<String, Field> getQueryColumnFieldMap(Class<?> clazz) {
         Map<String, Field> resultMap = new LinkedHashMap<String, Field>();
-        Field[] declaredFields = clazz.getDeclaredFields(); // ÉùÃ÷µÄËùÓĞ×Ö¶Î
-        Set<String> voFieldNames = new LinkedHashSet<String>(); // VO ÀàÉùÃ÷µÄ×Ö¶ÎÃû³Æ¼¯ºÏ
+        Field[] declaredFields = clazz.getDeclaredFields(); // å£°æ˜çš„æ‰€æœ‰å­—æ®µ
+        Set<String> voFieldNames = new LinkedHashSet<String>(); // VO ç±»å£°æ˜çš„å­—æ®µåç§°é›†åˆ
         int mod;
         com.cdphantom.suzaku.annotation.Field fieldAnnotation;
         for (Field field : declaredFields) {
             mod = field.getModifiers();
             if (Modifier.isStatic(mod) || Modifier.isFinal(mod) || Modifier.isVolatile(mod)
                     || Modifier.isTransient(mod)) {
-                continue; // Èç¹ûÊÇ static, final, volatile, transient µÄ×Ö¶Î£¬ÔòÖ±½ÓÌø¹ı
+                continue; // å¦‚æœæ˜¯ static, final, volatile, transient çš„å­—æ®µï¼Œåˆ™ç›´æ¥è·³è¿‡
             }
 
             voFieldNames.add(field.getName());
@@ -57,19 +57,19 @@ public class SQLGenerator extends GenerateQL {
             }
         }
 
-        // ´¦Àí PO ÖĞ¶¨ÒåµÄ×Ö¶Î
+        // å¤„ç† PO ä¸­å®šä¹‰çš„å­—æ®µ
         Class<?> poClass = clazz.getSuperclass();
         if (poClass.isAnnotationPresent(Entity.class)) {
             declaredFields = poClass.getDeclaredFields();
             for (Field field : declaredFields) {
                 if (voFieldNames.contains(field.getName())) {
-                    continue; // Èç¹ûÔÚ VO ÖĞ¶¨ÒåÁË£¨ÔÚÇ°ÃæÒÑ¾­´¦Àí¹ı£©£¬ ÔòÖ±½ÓÌø¹ı
+                    continue; // å¦‚æœåœ¨ VO ä¸­å®šä¹‰äº†ï¼ˆåœ¨å‰é¢å·²ç»å¤„ç†è¿‡ï¼‰ï¼Œ åˆ™ç›´æ¥è·³è¿‡
                 }
 
                 mod = field.getModifiers();
                 if (Modifier.isStatic(mod) || Modifier.isFinal(mod) || Modifier.isVolatile(mod)
                         || Modifier.isTransient(mod)) {
-                    continue; // Èç¹ûÊÇ static, final, volatile, transient µÄ×Ö¶Î£¬ÔòÖ±½ÓÌø¹ı
+                    continue; // å¦‚æœæ˜¯ static, final, volatile, transient çš„å­—æ®µï¼Œåˆ™ç›´æ¥è·³è¿‡
                 }
 
                 try {
@@ -86,7 +86,7 @@ public class SQLGenerator extends GenerateQL {
     @Override
     public String generateQueryLanguage(Class<?> resultType, Map<String, ?> params, Dialect dialect)
             throws RuntimeException {
-        // ¼ì²éÊÇ·ñÊÇVOÀà
+        // æ£€æŸ¥æ˜¯å¦æ˜¯VOç±»
         if (!resultType.isAnnotationPresent(Relations.class)) {
             throw new RuntimeException(resultType.getName() + " isn't assigned with @" + Relations.class.getName());
         }
@@ -96,12 +96,12 @@ public class SQLGenerator extends GenerateQL {
 
     @Override
     protected String getQueryColumns(Class<?> resultType) {
-        StringBuffer columns = new StringBuffer(); // Òª²éÑ¯µÄ×Ö¶Î£¨×Ö¶ÎÖ®¼äÊ¹ÓÃÓ¢ÎÄ¶ººÅ·Ö¸ô£©
+        StringBuffer columns = new StringBuffer(); // è¦æŸ¥è¯¢çš„å­—æ®µï¼ˆå­—æ®µä¹‹é—´ä½¿ç”¨è‹±æ–‡é€—å·åˆ†éš”ï¼‰
         Map<String, Field> columnFieldMap = getQueryColumnFieldMap(resultType);
         for (Entry<String, Field> entry : columnFieldMap.entrySet()) {
             columns.append(entry.getKey()).append(" as ").append(entry.getValue().getName()).append(", ");
         }
-        // É¾³ıÄ©Î²µÄ ¡°, ¡± ºó·µ»Ø
+        // åˆ é™¤æœ«å°¾çš„ â€œ, â€ åè¿”å›
         return columns.delete(columns.length() - 2, columns.length()).toString();
     }
 
@@ -127,34 +127,34 @@ public class SQLGenerator extends GenerateQL {
             com.cdphantom.suzaku.annotation.Field fieldAnnotation = field
                     .getAnnotation(com.cdphantom.suzaku.annotation.Field.class);
             if (fieldAnnotation == null) {
-                // ´«ÈëµÄ×Ö¶ÎÃ»ÓĞÊ¹ÓÃ @gboat2.base.core.annotation.Field ±ê×¢
-                throw new RuntimeException("VO Àà [" + declaringClass.getName() + "] µÄ×Ö¶Î [" + field.getName()
-                        + "] Ã»ÓĞÊ¹ÓÃ×¢½â @" + com.cdphantom.suzaku.annotation.Field.class.getName() + " ½øĞĞ±ê×¢£¬²»ÔÊĞí¶Ô¸Ã×Ö¶Î½øĞĞ²éÑ¯");
+                // ä¼ å…¥çš„å­—æ®µæ²¡æœ‰ä½¿ç”¨ @gboat2.base.core.annotation.Field æ ‡æ³¨
+                throw new RuntimeException("VO ç±» [" + declaringClass.getName() + "] çš„å­—æ®µ [" + field.getName()
+                        + "] æ²¡æœ‰ä½¿ç”¨æ³¨è§£ @" + com.cdphantom.suzaku.annotation.Field.class.getName() + " è¿›è¡Œæ ‡æ³¨ï¼Œä¸å…è®¸å¯¹è¯¥å­—æ®µè¿›è¡ŒæŸ¥è¯¢");
             }
 
             poClass = fieldAnnotation.clazz();
             fieldOfPO = ClassHelper.getField(poClass,
                     StringUtils.defaultIfBlank(fieldAnnotation.column(), field.getName()));
             if (fieldOfPO == null) {
-                throw new RuntimeException("VO Àà [" + declaringClass + "] ÖĞµÄ×Ö¶Î [" + field.getName()
-                        + "] ÔÚÆä¶ÔÓ¦µÄ PO Àà [" + poClass.getName()
-                        + "] ÖĞÃ»ÓĞÕÒµ½Æ¥ÅäµÄ×Ö¶Î¶¨Òå£¬Çë½« VO ºÍ PO ÀàÖĞµÄ×Ö¶ÎÃû³ÆµÄ´óĞ¡Ğ´±£³ÖÒ»ÖÂ£¬»òÍ¨¹ı @Field ×¢½âµÄ column ÊôĞÔÃ÷È·Ö¸¶¨ÆäÔÚ PO ÖĞ¶ÔÓ¦µÄ×Ö¶Î¡£");
+                throw new RuntimeException("VO ç±» [" + declaringClass + "] ä¸­çš„å­—æ®µ [" + field.getName()
+                        + "] åœ¨å…¶å¯¹åº”çš„ PO ç±» [" + poClass.getName()
+                        + "] ä¸­æ²¡æœ‰æ‰¾åˆ°åŒ¹é…çš„å­—æ®µå®šä¹‰ï¼Œè¯·å°† VO å’Œ PO ç±»ä¸­çš„å­—æ®µåç§°çš„å¤§å°å†™ä¿æŒä¸€è‡´ï¼Œæˆ–é€šè¿‡ @Field æ³¨è§£çš„ column å±æ€§æ˜ç¡®æŒ‡å®šå…¶åœ¨ PO ä¸­å¯¹åº”çš„å­—æ®µã€‚");
             }
         } else {
-            throw new RuntimeException("×Ö¶Î [" + field.getName() + "] µÄÉùÃ÷Àà [" + declaringClass.getName()
-                    + "] ¼È²»ÊÇ PO£¬ ÓÖ²»ÊÇ VO£¬²»ÔÊĞí¶Ô¸Ã×Ö¶Î½øĞĞ²éÑ¯");
+            throw new RuntimeException("å­—æ®µ [" + field.getName() + "] çš„å£°æ˜ç±» [" + declaringClass.getName()
+                    + "] æ—¢ä¸æ˜¯ POï¼Œ åˆä¸æ˜¯ VOï¼Œä¸å…è®¸å¯¹è¯¥å­—æ®µè¿›è¡ŒæŸ¥è¯¢");
         }
 
         String fieldName = fieldOfPO.getName();
         if (isTransient(fieldOfPO)) {
-            throw new RuntimeException("Àà [" + poClass.getName() + "] ÖĞµÄ×Ö¶Î [" + fieldName + "] ±»±ê×¢Îª @"
+            throw new RuntimeException("ç±» [" + poClass.getName() + "] ä¸­çš„å­—æ®µ [" + fieldName + "] è¢«æ ‡æ³¨ä¸º @"
                     + Transient.class.getName());
         }
 
-        // ¼ì²é×Ö¶Î¶¨ÒåÊÇ·ñÊ¹ÓÃÁË @Column ×¢½â
+        // æ£€æŸ¥å­—æ®µå®šä¹‰æ˜¯å¦ä½¿ç”¨äº† @Column æ³¨è§£
         Column column = fieldOfPO.getAnnotation(Column.class);
         if (column == null) {
-            // ¼ì²é get ·½·¨ÊÇ·ñÅäÖÃÁË @Column
+            // æ£€æŸ¥ get æ–¹æ³•æ˜¯å¦é…ç½®äº† @Column
             Method getMethod = ClassHelper.findGetMethod(poClass, fieldOfPO);
             if (getMethod != null) {
                 column = getMethod.getAnnotation(Column.class);
@@ -162,7 +162,7 @@ public class SQLGenerator extends GenerateQL {
         }
 
         if (column == null) {
-            // ¼ì²é set ·½·¨ÊÇ·ñÅäÖÃÁË @Column
+            // æ£€æŸ¥ set æ–¹æ³•æ˜¯å¦é…ç½®äº† @Column
             Method setMethod = ClassHelper.findSetMethod(poClass, fieldOfPO);
             if (setMethod != null) {
                 column = setMethod.getAnnotation(Column.class);
@@ -192,12 +192,12 @@ public class SQLGenerator extends GenerateQL {
     }
 
     /**
-     * ½«²éÑ¯Ìõ¼şÖĞ _block ¶ÔÓ¦µÄ SQL Óï¾äÖĞµÄ [fieldName] Ìæ»»³É COLUMN_NAME£¨fieldName Îª VO »ò
-     * PO ÖĞµÄ×Ö¶ÎÃû£¬ COLUMN_NAME ÎªÊı¾İ±íÖĞµÄÁĞÃû£©
+     * å°†æŸ¥è¯¢æ¡ä»¶ä¸­ _block å¯¹åº”çš„ SQL è¯­å¥ä¸­çš„ [fieldName] æ›¿æ¢æˆ COLUMN_NAMEï¼ˆfieldName ä¸º VO æˆ–
+     * PO ä¸­çš„å­—æ®µåï¼Œ COLUMN_NAME ä¸ºæ•°æ®è¡¨ä¸­çš„åˆ—åï¼‰
      * 
-     * @param block SQL Óï¾ä¿é£¬ VO ÀàÖĞµÄ×Ö¶ÎÃûÓÃ [] °üÎ§£¬Èç£º [loginId] is null or [loginId]=''
-     * @param voClass VO Àà¶¨Òå
-     * @return ×ª»»ºóµÄÔ­Éú SQL Óï¾ä
+     * @param block SQL è¯­å¥å—ï¼Œ VO ç±»ä¸­çš„å­—æ®µåç”¨ [] åŒ…å›´ï¼Œå¦‚ï¼š [loginId] is null or [loginId]=''
+     * @param voClass VO ç±»å®šä¹‰
+     * @return è½¬æ¢åçš„åŸç”Ÿ SQL è¯­å¥
      */
     @Override
     protected String processBlockValue(Object block, Class<?> recordType) {
@@ -207,17 +207,17 @@ public class SQLGenerator extends GenerateQL {
         String fieldName;
         Field field;
         String columnName;
-        // ½âÎö ¡°[ÀàÃû.×Ö¶ÎÃû]¡± »ò ¡°[×Ö¶ÎÃû]¡±
+        // è§£æ â€œ[ç±»å.å­—æ®µå]â€ æˆ– â€œ[å­—æ®µå]â€
         Matcher matcher = Pattern.compile("\\[\\s*(([a-zA-Z]\\w*\\.)?[a-zA-Z]\\w*)\\s*\\]").matcher(strValue);
         while (matcher.find()) {
             fieldName = matcher.group(1);
-            if (fieldName.contains(".")) { // Í¬Ê±Ö¸¶¨ÁËÀàÃûºÍ×Ö¶ÎÃû
+            if (fieldName.contains(".")) { // åŒæ—¶æŒ‡å®šäº†ç±»åå’Œå­—æ®µå
                 columnName = fieldName2ColumnName(fieldName, recordType);
             } else {
                 field = ClassHelper.getField(recordType, fieldName);
                 if (field == null) {
-                    throw new RuntimeException("²ÎÊı [" + PARAM_BLOCK + "] Ö¸¶¨µÄ×Ö¶Î [" + fieldName + "] ÔÚ VO Àà ["
-                            + recordType.getName() + "] ÖĞ²»´æ");
+                    throw new RuntimeException("å‚æ•° [" + PARAM_BLOCK + "] æŒ‡å®šçš„å­—æ®µ [" + fieldName + "] åœ¨ VO ç±» ["
+                            + recordType.getName() + "] ä¸­ä¸å­˜");
                 }
                 columnName = getColumnName(field);
             }
@@ -228,16 +228,16 @@ public class SQLGenerator extends GenerateQL {
     }
 
     /**
-     * ¸ù¾İ PO µÄÀà¶¨Òå»ñÈ¡ PO ¶ÔÓ¦µÄ±íÃû³Æ
+     * æ ¹æ® PO çš„ç±»å®šä¹‰è·å– PO å¯¹åº”çš„è¡¨åç§°
      * 
-     * @param poClass Ê¹ÓÃÁË &#64;Table ×¢½âµÄ PO Àà¶¨Òå
-     * @return ±íÃû³Æ£¬Èç£º gboat.G2_T_USER »ò G2_T_USER
+     * @param poClass ä½¿ç”¨äº† &#64;Table æ³¨è§£çš„ PO ç±»å®šä¹‰
+     * @return è¡¨åç§°ï¼Œå¦‚ï¼š gboat.G2_T_USER æˆ– G2_T_USER
      */
     private String getTableName(Class<?> poClass) {
         Table table = poClass.getAnnotation(Table.class);
         if (table == null) {
-            throw new RuntimeException("Àà [" + poClass.getName() + "] Ã»ÓĞÊ¹ÓÃ @" + Table.class.getName()
-                    + " ×¢½â£¬ÎŞ·¨»ñÈ¡Æä¶ÔÓ¦µÄÊı¾İ±íÃû³Æ");
+            throw new RuntimeException("ç±» [" + poClass.getName() + "] æ²¡æœ‰ä½¿ç”¨ @" + Table.class.getName()
+                    + " æ³¨è§£ï¼Œæ— æ³•è·å–å…¶å¯¹åº”çš„æ•°æ®è¡¨åç§°");
         }
 
         StringBuffer tablename = new StringBuffer();
@@ -251,10 +251,10 @@ public class SQLGenerator extends GenerateQL {
     }
 
     /**
-     * ¸ù¾İ PO Àà»ñÈ¡ÆäÔÚ²éÑ¯ SQL ÖĞ¶ÔÓ¦µÄ±ğÃû
+     * æ ¹æ® PO ç±»è·å–å…¶åœ¨æŸ¥è¯¢ SQL ä¸­å¯¹åº”çš„åˆ«å
      * 
-     * @param poClass PO Àà¶¨Òå
-     * @return SQL Óï¾äÖĞµÄ±í±ğÃû
+     * @param poClass PO ç±»å®šä¹‰
+     * @return SQL è¯­å¥ä¸­çš„è¡¨åˆ«å
      */
     private String getTableAlias(Class<?> poClass) {
         String key = poClass.getName();
@@ -284,7 +284,7 @@ public class SQLGenerator extends GenerateQL {
         
         for (int i = 0; i < relationArray.length; i++) {
             relation = relationArray[i];
-            // Èç¹û @Relation Ã»ÓĞ¶¨Òå base ÊôĞÔ£¬ÔòÊ¹ÓÃ @Relations ¶¨ÒåµÄ base ×÷Îª»ù´¡±í
+            // å¦‚æœ @Relation æ²¡æœ‰å®šä¹‰ base å±æ€§ï¼Œåˆ™ä½¿ç”¨ @Relations å®šä¹‰çš„ base ä½œä¸ºåŸºç¡€è¡¨
             baseClass = (relation.base() == Relation.DefaultBase.class ? basePo : relation.base());
             baseColumns = relation.baseColumn();
             referClass = relation.refer();
@@ -297,31 +297,31 @@ public class SQLGenerator extends GenerateQL {
                 result.append(processOn(relation.on(), baseClass, voClass, params, dialect));
             } else {
                 if (baseColumns.length != referColumns.length) {
-                    throw new RuntimeException("VO Àà [" + voClass.getName() + "] ÖĞµÚ [" + (i + 1)
-                            + "] ¸ö @Relation ×¢½âµÄ baseColumns ÊôĞÔÖµºÍ referColumns ÊôĞÔÖµµÄ³¤¶È±ØĞëÏàµÈ");
+                    throw new RuntimeException("VO ç±» [" + voClass.getName() + "] ä¸­ç¬¬ [" + (i + 1)
+                            + "] ä¸ª @Relation æ³¨è§£çš„ baseColumns å±æ€§å€¼å’Œ referColumns å±æ€§å€¼çš„é•¿åº¦å¿…é¡»ç›¸ç­‰");
                 }
                 for (int j = 0; j < baseColumns.length; j++) {
                     if (StringUtils.isBlank(baseColumns[j])) {
-                        throw new RuntimeException("VO Àà [" + voClass.getName() + "] ÖĞµÚ [" + (i + 1)
-                                + "] ¸ö @Relation ×¢½âµÄ baseColumn ÊôĞÔµÄµÚ [" + (j + 1) + "] ¸öÖµÎª¿Õ×Ö·û´®");
+                        throw new RuntimeException("VO ç±» [" + voClass.getName() + "] ä¸­ç¬¬ [" + (i + 1)
+                                + "] ä¸ª @Relation æ³¨è§£çš„ baseColumn å±æ€§çš„ç¬¬ [" + (j + 1) + "] ä¸ªå€¼ä¸ºç©ºå­—ç¬¦ä¸²");
                     }
                     if (StringUtils.isBlank(referColumns[j])) {
-                        throw new RuntimeException("VO Àà [" + voClass.getName() + "] ÖĞµÚ [" + (i + 1)
-                                + "] ¸ö @Relation ×¢½âµÄ referColumn ÊôĞÔµÄµÚ [" + (j + 1) + "] ¸öÖµÎª¿Õ×Ö·û´®");
+                        throw new RuntimeException("VO ç±» [" + voClass.getName() + "] ä¸­ç¬¬ [" + (i + 1)
+                                + "] ä¸ª @Relation æ³¨è§£çš„ referColumn å±æ€§çš„ç¬¬ [" + (j + 1) + "] ä¸ªå€¼ä¸ºç©ºå­—ç¬¦ä¸²");
                     }
 
                     baseField = ClassHelper.getField(baseClass, StringUtils.trim(baseColumns[j]));
                     if (baseField == null) {
-                        throw new RuntimeException("VO Àà [" + voClass.getName() + "] ÖĞµÚ [" + (i + 1)
-                                + "] ¸ö @Relation ×¢½âµÄ baseColumn ÊôĞÔµÄµÚ [" + (j + 1) + "] ¸öÖµ [" + baseColumns[j]
-                                + "] ÔÚ PO [" + baseClass.getName() + "] ÖĞÃ»ÓĞÕÒµ½¶ÔÓ¦µÄ×Ö¶Î");
+                        throw new RuntimeException("VO ç±» [" + voClass.getName() + "] ä¸­ç¬¬ [" + (i + 1)
+                                + "] ä¸ª @Relation æ³¨è§£çš„ baseColumn å±æ€§çš„ç¬¬ [" + (j + 1) + "] ä¸ªå€¼ [" + baseColumns[j]
+                                + "] åœ¨ PO [" + baseClass.getName() + "] ä¸­æ²¡æœ‰æ‰¾åˆ°å¯¹åº”çš„å­—æ®µ");
                     }
 
                     referField = ClassHelper.getField(referClass, StringUtils.trim(referColumns[j]));
                     if (referField == null) {
-                        throw new RuntimeException("VO Àà [" + voClass.getName() + "] ÖĞµÚ [" + (i + 1)
-                                + "] ¸ö @Relation ×¢½âµÄ referColumn ÊôĞÔµÄµÚ [" + (j + 1) + "] ¸öÖµ [" + referColumns[j]
-                                + "] ÔÚ PO [" + referClass.getName() + "] ÖĞÃ»ÓĞÕÒµ½¶ÔÓ¦µÄ×Ö¶Î");
+                        throw new RuntimeException("VO ç±» [" + voClass.getName() + "] ä¸­ç¬¬ [" + (i + 1)
+                                + "] ä¸ª @Relation æ³¨è§£çš„ referColumn å±æ€§çš„ç¬¬ [" + (j + 1) + "] ä¸ªå€¼ [" + referColumns[j]
+                                + "] åœ¨ PO [" + referClass.getName() + "] ä¸­æ²¡æœ‰æ‰¾åˆ°å¯¹åº”çš„å­—æ®µ");
                     }
 
                     if (j > 0) {
@@ -337,20 +337,20 @@ public class SQLGenerator extends GenerateQL {
     
     private String processOn(String on, Class<?> base, Class<?> voClass, Map<String, ?> params, Dialect dialect) {
         StringBuffer result = new StringBuffer();
-        // ´¦Àí on ÖĞ¶¨ÒåµÄ×Ö¶Î£¬×Ö¶Î²ÉÓÃ [] À¨ÆğÀ´£¬¸ñÊ½¿ÉÒÔÎª¡°ÊôĞÔÃû¡±»ò¡°ÀàÃû.ÊôĞÔÃû¡±£¬²»Ö¸¶¨ÀàÃûÄ¬ÈÏÎª Relation ÖĞ base Àà
+        // å¤„ç† on ä¸­å®šä¹‰çš„å­—æ®µï¼Œå­—æ®µé‡‡ç”¨ [] æ‹¬èµ·æ¥ï¼Œæ ¼å¼å¯ä»¥ä¸ºâ€œå±æ€§åâ€æˆ–â€œç±»å.å±æ€§åâ€ï¼Œä¸æŒ‡å®šç±»åé»˜è®¤ä¸º Relation ä¸­ base ç±»
         Matcher matcher = Pattern.compile("\\[\\s*(([a-zA-Z]\\w*\\.)?[a-zA-Z]\\w*)\\s*\\]").matcher(on);
-        String fieldName; // ×Ö¶ÎÃû³Æ
-        Field field; // ×Ö¶Î¶¨Òå
+        String fieldName; // å­—æ®µåç§°
+        Field field; // å­—æ®µå®šä¹‰
         String columnName;
         while (matcher.find()) {
             fieldName = matcher.group(1);
-            if (fieldName.contains(".")) { // Í¬Ê±Ö¸¶¨ÁËÀàÃûºÍ×Ö¶ÎÃû
+            if (fieldName.contains(".")) { // åŒæ—¶æŒ‡å®šäº†ç±»åå’Œå­—æ®µå
                 columnName = fieldName2ColumnName(fieldName, voClass);
             } else {
                 field = ClassHelper.getField(base, fieldName);
                 if (field == null) {
-                    throw new RuntimeException("VO Àà [" + voClass.getName() + "] ÖĞ @Relation ×¢½âµÄ on ÊôĞÔÖµ [" + on
-                            + "] ÖĞÖ¸¶¨µÄ×Ö¶ÎÃû [" + fieldName + "] ÔÚ PO Àà [" + base.getName() + "] ÖĞ²»´æÔÚ");
+                    throw new RuntimeException("VO ç±» [" + voClass.getName() + "] ä¸­ @Relation æ³¨è§£çš„ on å±æ€§å€¼ [" + on
+                            + "] ä¸­æŒ‡å®šçš„å­—æ®µå [" + fieldName + "] åœ¨ PO ç±» [" + base.getName() + "] ä¸­ä¸å­˜åœ¨");
                 }
                 columnName = getColumnName(field);
             }
@@ -359,7 +359,7 @@ public class SQLGenerator extends GenerateQL {
         matcher.appendTail(result);
 
         StringBuffer sql = new StringBuffer();
-        // on ¹ØÁª¹ØÏµÖĞµÄ±äÁ¿¸ñÊ½Îª ¡°{±äÁ¿Ãû³Æ}¡±
+        // on å…³è”å…³ç³»ä¸­çš„å˜é‡æ ¼å¼ä¸º â€œ{å˜é‡åç§°}â€
         Matcher matcher2 = Pattern.compile("\\{(\\s*[a-zA-Z]\\w*\\s*)\\}").matcher(result.toString());
         String variableName;
         Object value;
@@ -368,23 +368,23 @@ public class SQLGenerator extends GenerateQL {
             variableName = matcher2.group(1);
             value = params.get(variableName);
             if (value == null) {
-                throw new RuntimeException("VO Àà [" + voClass.getName() + "] ÖĞ @Relation ×¢½âµÄ on ÊôĞÔÖµ [" + on
-                        + "] ÖĞÖ¸¶¨µÄ²ÎÊı [" + variableName + "] µÄÖµÎª null");
+                throw new RuntimeException("VO ç±» [" + voClass.getName() + "] ä¸­ @Relation æ³¨è§£çš„ on å±æ€§å€¼ [" + on
+                        + "] ä¸­æŒ‡å®šçš„å‚æ•° [" + variableName + "] çš„å€¼ä¸º null");
             }
 
-            if (value instanceof Number) { // Êı×Ö
+            if (value instanceof Number) { // æ•°å­—
                 valueStr = value.toString();
             } else if ((value instanceof Boolean) || (value instanceof Character) || (value instanceof CharSequence)
-                    || (value instanceof Enum)) { // ²¼¶û¡¢×Ö·û´®¡¢Ã¶¾Ù£¬ÓÃµ¥ÒıºÅ½«Öµ°üÆğÀ´
+                    || (value instanceof Enum)) { // å¸ƒå°”ã€å­—ç¬¦ä¸²ã€æšä¸¾ï¼Œç”¨å•å¼•å·å°†å€¼åŒ…èµ·æ¥
                 valueStr = "'" + value + "'";
             } else if ((value instanceof Date) || (value instanceof Calendar)) {
-                // ÈÕÆÚ¡¢ÈÕÀú£¬×ª»»³ÉÊı¾İ¿âÖĞµÄÈÕÆÚ¶ÔÏó
+                // æ—¥æœŸã€æ—¥å†ï¼Œè½¬æ¢æˆæ•°æ®åº“ä¸­çš„æ—¥æœŸå¯¹è±¡
                 Date date = ((value instanceof Calendar) ? ((Calendar) value).getTime() : (Date) value);
                 valueStr = getString2DateSQL(DateUtil.format(date), dialect);
             } else {
-                // XXX hemw ºóĞø¿ÉÒÔ¿¼ÂÇÊµÏÖ¶Ô java.lang.Iterable¡¢java.util.Iterator ºÍÊı×é½øĞĞÖ§³Ö
-                throw new RuntimeException("@Relation ×¢½âµÄ on ÊôĞÔÖµ [" + on + "] ÖĞÖ¸¶¨µÄ²ÎÊı [" + variableName
-                        + "] µÄÖµÎª [" + value + "]£¬Ä¿Ç°»¹²»Ö§³ÖÆä¶ÔÓ¦µÄÊı¾İÀàĞÍ [" + value.getClass().getName() + "]");
+                // åç»­å¯ä»¥è€ƒè™‘å®ç°å¯¹ java.lang.Iterableã€java.util.Iterator å’Œæ•°ç»„è¿›è¡Œæ”¯æŒ
+                throw new RuntimeException("@Relation æ³¨è§£çš„ on å±æ€§å€¼ [" + on + "] ä¸­æŒ‡å®šçš„å‚æ•° [" + variableName
+                        + "] çš„å€¼ä¸º [" + value + "]ï¼Œç›®å‰è¿˜ä¸æ”¯æŒå…¶å¯¹åº”çš„æ•°æ®ç±»å‹ [" + value.getClass().getName() + "]");
             }
             matcher2.appendReplacement(sql, valueStr);
         }
@@ -393,23 +393,23 @@ public class SQLGenerator extends GenerateQL {
     }
 
     /**
-     * ½«×Ö¶ÎÃû×ª»»³É¶ÔÓ¦µÄÊı¾İ¿â×Ö¶ÎÃû
+     * å°†å­—æ®µåè½¬æ¢æˆå¯¹åº”çš„æ•°æ®åº“å­—æ®µå
      * 
-     * @param name ×Ö¶ÎÃû£¬¸ñÊ½Îª¡°ÀàÃû¼òĞ´.×Ö¶ÎÃû¡±
-     * @param voClass VO Àà
-     * @return ¶ÔÓ¦µÄÊı¾İ¿â×Ö¶ÎÃû
-     * @throws IllegalArgumentException µ±´«ÈëµÄ fieldName µÄ¸ñÊ½²»·ûºÏÒªÇóÊ±Å×³ö¸ÃÒì³£
+     * @param name å­—æ®µåï¼Œæ ¼å¼ä¸ºâ€œç±»åç®€å†™.å­—æ®µåâ€
+     * @param voClass VO ç±»
+     * @return å¯¹åº”çš„æ•°æ®åº“å­—æ®µå
+     * @throws IllegalArgumentException å½“ä¼ å…¥çš„ fieldName çš„æ ¼å¼ä¸ç¬¦åˆè¦æ±‚æ—¶æŠ›å‡ºè¯¥å¼‚å¸¸
      */
     private String fieldName2ColumnName(String name, Class<?> voClass) {
         String[] array = name.split("\\.");
         if (array.length != 2) {
-            throw new IllegalArgumentException("×Ö¶ÎÃû [" + name + "] µÄ¸ñÊ½²»ÕıÈ·£¬Ó¦¸ÃÎª¡°ÀàÃû¼òĞ´.×Ö¶ÎÃû¡±");
+            throw new IllegalArgumentException("å­—æ®µå [" + name + "] çš„æ ¼å¼ä¸æ­£ç¡®ï¼Œåº”è¯¥ä¸ºâ€œç±»åç®€å†™.å­—æ®µåâ€");
         }
 
         String classSimpleName = array[0].trim();
         String fieldName = array[1].trim();
         if (classSimpleName.isEmpty() || fieldName.isEmpty()) {
-            throw new IllegalArgumentException("×Ö¶ÎÃû [" + name + "] µÄ¸ñÊ½²»ÕıÈ·£¬Ó¦¸ÃÎª¡°ÀàÃû¼òĞ´.×Ö¶ÎÃû¡±");
+            throw new IllegalArgumentException("å­—æ®µå [" + name + "] çš„æ ¼å¼ä¸æ­£ç¡®ï¼Œåº”è¯¥ä¸ºâ€œç±»åç®€å†™.å­—æ®µåâ€");
         }
 
         Class<?> declaringClass = null;
@@ -436,14 +436,14 @@ public class SQLGenerator extends GenerateQL {
         }
 
         if (declaringClass == null) {
-            throw new RuntimeException("×Ö¶ÎÃû [" + name + "] ÎŞĞ§£º Ö¸¶¨µÄÊµÌåÀà [" + classSimpleName + "] Ã»ÓĞÓë VO ["
-                    + voClass.getName() + "] ¹ØÁª");
+            throw new RuntimeException("å­—æ®µå [" + name + "] æ— æ•ˆï¼š æŒ‡å®šçš„å®ä½“ç±» [" + classSimpleName + "] æ²¡æœ‰ä¸ VO ["
+                    + voClass.getName() + "] å…³è”");
         }
 
         Field field = ClassHelper.getFieldIgnoreCase(declaringClass, fieldName);
         if (field == null) {
-            throw new RuntimeException("×Ö¶ÎÃû [" + name + "] ÎŞĞ§£º ÊµÌåÀà [" + declaringClass.getName()
-                    + "] ÖĞ²»´æÔÚÃû³ÆÎª [" + fieldName + "] µÄ×Ö¶Î");
+            throw new RuntimeException("å­—æ®µå [" + name + "] æ— æ•ˆï¼š å®ä½“ç±» [" + declaringClass.getName()
+                    + "] ä¸­ä¸å­˜åœ¨åç§°ä¸º [" + fieldName + "] çš„å­—æ®µ");
         }
         return getColumnName(field);
     }
